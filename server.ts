@@ -3,12 +3,17 @@
 
 import express from 'express';
 import mqtt from 'mqtt';
+import dotenv from "dotenv";
+import * as production from './modules/production';
+import { time } from 'console';
 
+dotenv.config();
 const app = express();
 const port = 3000;
 
 // Configure MQTT client
-const mqttClient = mqtt.connect('mqtt://localhost:1884'); // Replace with your MQTT broker URL
+const mqttClient = mqtt.connect(process.env.DSN_MQTT||'mqtt://localhost:1884'); // Replace with your MQTT broker URL
+// process.env.
 
 // Store the latest state of each flag
 const sensorState: { [flag: string]: number } = {};
@@ -38,19 +43,30 @@ const handleSensorData = (data: {
   addTime: string;
   retransmit: string;
 }) => {
-  const { sensorDatas } = data;
+  const { sensorDatas, time } = data;
 
-  // init data perlu ada in case ketika mati
-  sensorDatas.forEach(sensor => {
+  sensorDatas.forEach(async sensor => {
     const { flag, switcher } = sensor;
     
     if (sensorState[flag] !== undefined) {
       if (sensorState[flag] !== switcher) {
         console.log(`State changed for ${flag}: ${sensorState[flag]} -> ${switcher}`);
-        console.log(`Data update to DB`);
 
         if (sensorState[flag] == 0 && switcher == 1) {
-          console.log(`Qty tambah ke DB`);
+          console.log(`REG001 added`);
+          // if flag == "REG001"
+          if (flag == 'REG001') {
+            var production_plan_detail_id = await production.getProductionPlanDetail()
+            if (production_plan_detail_id != null) {
+              var timeInt = parseInt(time)
+              var recordedTime: Date = new Date(timeInt*1000)
+
+              var result = await production.setProductionActual(production_plan_detail_id, recordedTime)
+              // console.log(`Production Actual : `, result)
+            } else {
+              // console.log(`Production Plan Detail Null`)
+            }
+          }
         }
         // Handle the event where the object has passed the conveyor belt
       }
@@ -65,5 +81,5 @@ const handleSensorData = (data: {
 
 // Start Express server
 app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
+  console.log(`Server is running on port ${port}`);
 });

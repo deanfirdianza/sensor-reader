@@ -11,5 +11,10 @@
     "mqtt": "^5.9.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.4"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.11.6",
+    "dotenv": "^16.4.5",
+    "pg": "^8.12.0"
   }
 }
