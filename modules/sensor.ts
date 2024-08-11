@@ -5,7 +5,7 @@ export function checkSensorRegistry(key: string): boolean {
         const numPart = parseInt(key.substring(3), 10);
         
         // Check if the numeric part is between 1 and 26 (inclusive)
-        if (numPart >= 1 && numPart <= 26) {
+        if (numPart >= 1 && numPart <= 27) {
             return true;
         }
     }
