@@ -3,7 +3,7 @@
 import pool, { ProductionActualsTableName, ProductionPlanDetailsTableName, ProductionPlanHeadersTableName } from "../config/db";
 
 var production_plan_detail_object: {"id":number}
-var production_plan_header_object: number[] = [];
+var production_plan_header_object: {"id":number};
 
 export async function getProductionPlanDetail(): Promise<number|null> {
     try {
@@ -73,7 +73,7 @@ export async function setProductionActual(production_plan_detail_id: number, rec
     }
 }
 
-export async function getProductionPlanHeader(): Promise<number[] | null> {
+export async function getProductionPlanHeader(): Promise<number | null> {
     try {
         const query = `
             SELECT 
@@ -81,14 +81,15 @@ export async function getProductionPlanHeader(): Promise<number[] | null> {
             FROM 
                 "${ProductionPlanHeadersTableName}" pph 
             WHERE 
-                now() BETWEEN pph.start_time AND pph.end_time;
+                now() BETWEEN pph.start_time AND pph.end_time
+            LIMIT 1;
         `;
 
         const result = await pool.query(query);
 
         if (result.rows.length > 0) {
-            production_plan_header_object = result.rows.map(row => row.id);
-            return production_plan_header_object;
+            production_plan_header_object = result.rows[0];
+            return production_plan_header_object.id;
         } else {
             console.log("No production plan headers found.");
             return null;

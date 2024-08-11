@@ -74,10 +74,10 @@ const handleSensorData = (data: {
             } else {
               console.log(`${flag} PROCESS`);
               // REG002 - REG026
-              var pphIds = await production.getProductionPlanHeader()
-              if (pphIds != null) {
+              var pphId = await production.getProductionPlanHeader()
+              if (pphId != null) {
                 var assemblyName = getAssemblyNameFromSensorKey(flag)
-                result = await item_requests.setItemRequestFromProductionSensorBatch(pphIds, assemblyName)
+                result = await item_requests.setItemRequestFromProductionSensorBatch(pphId, assemblyName)
                 // console.log(`Item Request Result : `, result)
               } else {
                 console.log(`ppdIds null`);

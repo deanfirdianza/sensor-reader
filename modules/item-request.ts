@@ -4,7 +4,7 @@ interface MasterOpAssembly {
     id: number;
 }
 
-export async function setItemRequestFromProductionSensorBatch(production_plan_header_ids: number[], sensor_name: string) {
+export async function setItemRequestFromProductionSensorBatch(production_plan_header_id: number, sensor_name: string) {
     try {
         // Query to get the assembly ID based on the sensor name
         const queryAssembly = `
@@ -25,20 +25,12 @@ export async function setItemRequestFromProductionSensorBatch(production_plan_he
                 INSERT INTO 
                     "${ItemRequestsTableName}" (production_plan_header_id, op_assembly_id, start_time, end_time)
                 VALUES 
-            `;
-
-            const queryValues: number[] = [];
-            production_plan_header_ids.forEach((planDetailId, index) => {
-                query += `($${index * 2 + 1}, $${index * 2 + 2}, NOW(), NULL),`;
-                queryValues.push(planDetailId, masterOpAssembly.id);
-            });
-
-            // Remove the trailing comma and add the ON CONFLICT clause
-            query = query.slice(0, -1);
-            query += `
+                    ($1, $2, NOW(), NULL)
                 ON CONFLICT (production_plan_header_id, op_assembly_id)
                 DO UPDATE SET end_time = NOW()
             `;
+
+            var queryValues = [production_plan_header_id, masterOpAssembly.id]
 
             // Execute the batch query
             const result = await pool.query(query, queryValues);
