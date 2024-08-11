@@ -11,4 +11,11 @@ const pool = new Pool({
   database: process.env.DB_NAME,
 });
 
+export const MasterOpAssembliesTableName = `MasterOpAssemblies`
+export const ProductionPlanDetailsTableName = `ProductionPlanDetails`
+export const ProductionPlanHeadersTableName = `ProductionPlanHeaders`
+export const ItemRequestsTableName = `ItemRequests`
+export const ProductionActualsTableName = `ProductionActuals`
+
+
 export default pool;

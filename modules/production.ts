@@ -1,8 +1,9 @@
 // production.js
 
-import pool from "../config/db";
+import pool, { ProductionActualsTableName, ProductionPlanDetailsTableName, ProductionPlanHeadersTableName } from "../config/db";
 
 var production_plan_detail_object: {"id":number}
+var production_plan_header_object: number[] = [];
 
 export async function getProductionPlanDetail(): Promise<number|null> {
     try {
@@ -10,9 +11,9 @@ export async function getProductionPlanDetail(): Promise<number|null> {
             SELECT 
                 ppd.id
             FROM 
-                "ProductionPlanDetails" ppd
+                "${ProductionPlanDetailsTableName}" ppd
             JOIN 
-                "ProductionPlanHeaders" pph 
+                "${ProductionPlanHeadersTableName}" pph 
             ON 
                 ppd.header_id = pph.id
             WHERE 
@@ -22,7 +23,7 @@ export async function getProductionPlanDetail(): Promise<number|null> {
                 SELECT 
                     COUNT(id) 
                 FROM 
-                    "ProductionActuals" pa 
+                    "${ProductionActualsTableName}" pa 
                 WHERE 
                     pa.production_plan_detail_id = ppd.id
             ) < ppd.production_qty
@@ -35,7 +36,6 @@ export async function getProductionPlanDetail(): Promise<number|null> {
 
         if (result.rows.length > 0) {
             production_plan_detail_object = result.rows[0];
-            console.log("Production:", production_plan_detail_object.id);
             return production_plan_detail_object.id;
         } else {
             console.log("No production plan details found.");
@@ -50,7 +50,7 @@ export async function getProductionPlanDetail(): Promise<number|null> {
 export async function setProductionActual(production_plan_detail_id: number, recorded_time: Date) {
     try {
         const query = `
-            INSERT INTO "ProductionActuals" (production_plan_detail_id, recorded_time, created_at) 
+            INSERT INTO "${ProductionActualsTableName}" (production_plan_detail_id, recorded_time, created_at) 
             VALUES ($1, $2, now())
             RETURNING *;
         `;
@@ -71,6 +71,34 @@ export async function setProductionActual(production_plan_detail_id: number, rec
         console.error("Error inserting production actual:", err);
         throw err;
     }
-  }
+}
 
-// export default [getProductionPlanDetail, setProductionActual];
+export async function getProductionPlanDetailsFromHeader(): Promise<number[] | null> {
+    try {
+        const query = `
+            SELECT 
+                ppd.id
+            FROM 
+                "${ProductionPlanDetailsTableName}" ppd
+            JOIN 
+                "${ProductionPlanHeadersTableName}" pph 
+            ON 
+                ppd.header_id = pph.id
+            WHERE 
+                now() BETWEEN pph.start_time AND pph.end_time;
+        `;
+
+        const result = await pool.query(query);
+
+        if (result.rows.length > 0) {
+            production_plan_header_object = result.rows.map(row => row.id);
+            return production_plan_header_object;
+        } else {
+            console.log("No production plan headers found.");
+            return null;
+        }
+    } catch (err) {
+        console.error("Error executing query:", err);
+        throw err;
+    }
+}

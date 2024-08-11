@@ -6,6 +6,8 @@ import mqtt from 'mqtt';
 import dotenv from "dotenv";
 import * as production from './modules/production';
 import { time } from 'console';
+import { checkSensorRegistry } from './modules/sensor';
+import * as item_requests from './modules/item-request';
 
 dotenv.config();
 const app = express();
@@ -53,19 +55,36 @@ const handleSensorData = (data: {
         console.log(`State changed for ${flag}: ${sensorState[flag]} -> ${switcher}`);
 
         if (sensorState[flag] == 0 && switcher == 1) {
-          console.log(`REG001 added`);
           // if flag == "REG001"
-          if (flag == 'REG001') {
-            var production_plan_detail_id = await production.getProductionPlanDetail()
-            if (production_plan_detail_id != null) {
-              var timeInt = parseInt(time)
-              var recordedTime: Date = new Date(timeInt*1000)
-
-              var result = await production.setProductionActual(production_plan_detail_id, recordedTime)
-              // console.log(`Production Actual : `, result)
+          if (checkSensorRegistry(flag)) {
+            if (flag == 'REG001') {
+              console.log("REG001 PROCESS");
+              
+              // REG001
+              var production_plan_detail_id = await production.getProductionPlanDetail()
+              if (production_plan_detail_id != null) {
+                var timeInt = parseInt(time)
+                var recordedTime: Date = new Date(timeInt*1000)
+  
+                var result = await production.setProductionActual(production_plan_detail_id, recordedTime)
+                // console.log(`Production Actual : `, result)
+              } else {
+                // console.log(`Production Plan Detail Null`)
+              }
             } else {
-              // console.log(`Production Plan Detail Null`)
+              console.log(`${flag} PROCESS`);
+              // REG002 - REG026
+              var ppdIds = await production.getProductionPlanDetailsFromHeader()
+              if (ppdIds != null) {
+                result = await item_requests.setItemRequestFromProductionSensorBatch(ppdIds, flag)
+                // console.log(`Item Request Result : `, result)
+              } else {
+                console.log(`ppdIds null`);
+              }
             }
+          } else {
+            // NON REGISTERED KEY
+            console.log(`Key ${flag} not registered`);
           }
         }
         // Handle the event where the object has passed the conveyor belt
