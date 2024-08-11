@@ -73,17 +73,13 @@ export async function setProductionActual(production_plan_detail_id: number, rec
     }
 }
 
-export async function getProductionPlanDetailsFromHeader(): Promise<number[] | null> {
+export async function getProductionPlanHeader(): Promise<number[] | null> {
     try {
         const query = `
             SELECT 
-                ppd.id
+                pph.id
             FROM 
-                "${ProductionPlanDetailsTableName}" ppd
-            JOIN 
                 "${ProductionPlanHeadersTableName}" pph 
-            ON 
-                ppd.header_id = pph.id
             WHERE 
                 now() BETWEEN pph.start_time AND pph.end_time;
         `;

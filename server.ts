@@ -6,7 +6,7 @@ import mqtt from 'mqtt';
 import dotenv from "dotenv";
 import * as production from './modules/production';
 import { time } from 'console';
-import { checkSensorRegistry } from './modules/sensor';
+import { checkSensorRegistry, getAssemblyNameFromSensorKey } from './modules/sensor';
 import * as item_requests from './modules/item-request';
 
 dotenv.config();
@@ -74,9 +74,10 @@ const handleSensorData = (data: {
             } else {
               console.log(`${flag} PROCESS`);
               // REG002 - REG026
-              var ppdIds = await production.getProductionPlanDetailsFromHeader()
-              if (ppdIds != null) {
-                result = await item_requests.setItemRequestFromProductionSensorBatch(ppdIds, flag)
+              var pphIds = await production.getProductionPlanHeader()
+              if (pphIds != null) {
+                var assemblyName = getAssemblyNameFromSensorKey(flag)
+                result = await item_requests.setItemRequestFromProductionSensorBatch(pphIds, assemblyName)
                 // console.log(`Item Request Result : `, result)
               } else {
                 console.log(`ppdIds null`);
