@@ -46,6 +46,8 @@ const handleSensorData = (data: {
   retransmit: string;
 }) => {
   const { sensorDatas, time } = data;
+  var timeInt = parseInt(time)
+  var recordedTime: Date = new Date(timeInt*1000)
 
   sensorDatas.forEach(async sensor => {
     const { flag, switcher } = sensor;
@@ -63,9 +65,6 @@ const handleSensorData = (data: {
               // REG001
               var production_plan_detail_id = await production.getProductionPlanDetail()
               if (production_plan_detail_id != null) {
-                var timeInt = parseInt(time)
-                var recordedTime: Date = new Date(timeInt*1000)
-  
                 var result = await production.setProductionActual(production_plan_detail_id, recordedTime)
                 // console.log(`Production Actual : `, result)
               } else {
@@ -74,13 +73,13 @@ const handleSensorData = (data: {
             } else {
               console.log(`${flag} PROCESS`);
               // REG002 - REG026
-              var pphId = await production.getProductionPlanHeader()
+              var pphId = await production.getProductionPlanHeader(recordedTime)
               if (pphId != null) {
                 var assemblyName = getAssemblyNameFromSensorKey(flag)
                 result = await item_requests.setItemRequestFromProductionSensorBatch(pphId, assemblyName)
                 // console.log(`Item Request Result : `, result)
               } else {
-                console.log(`ppdIds null`);
+                console.log(`pphId null`);
               }
             }
           } else {

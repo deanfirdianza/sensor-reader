@@ -73,7 +73,7 @@ export async function setProductionActual(production_plan_detail_id: number, rec
     }
 }
 
-export async function getProductionPlanHeader(): Promise<number | null> {
+export async function getProductionPlanHeader(recorded_time: Date): Promise<number | null> {
     try {
         const query = `
             SELECT 
@@ -81,12 +81,15 @@ export async function getProductionPlanHeader(): Promise<number | null> {
             FROM 
                 "${ProductionPlanHeadersTableName}" pph 
             WHERE 
-                now() BETWEEN pph.start_time AND pph.end_time
+                $1 BETWEEN pph.start_time AND pph.end_time
             LIMIT 1;
         `;
+        
+        const values = [recorded_time];
+        const result = await pool.query(query, values);
 
-        const result = await pool.query(query);
-
+        console.log(result);
+        
         if (result.rows.length > 0) {
             production_plan_header_object = result.rows[0];
             return production_plan_header_object.id;
